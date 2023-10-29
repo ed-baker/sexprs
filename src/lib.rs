@@ -6,25 +6,13 @@ use std::{
 
 use pp::BufPrinter;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Sexp {
     Atom(String),
     List(Vec<Sexp>),
 }
 
-// impl Sexp {
-//     fn to_string_hum(&self, p: &mut BufPrinter<'_>, indent: usize) -> String {
-//         let mut buf = String::new();
-//         self.to_buffer_hum(p, indent, &mut buf);
-//         buf
-//     }
-//
-//     fn to_buffer_hum(&self, p: &mut BufPrinter<'_>, indent: usize, buf: &mut String) {
-//         // pp.pp_tokenize(&self);
-//     }
-// }
-
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum FormatToken<'a> {
     Open(),
     Close(),
@@ -95,20 +83,11 @@ impl Display for Sexp {
     }
 }
 
-// impl Pretty for Sexp {
-//     fn prettify(&self, ppf: &mut BufPrinter<'_>) -> String {
-//         let indent = 2;
-//         pp_hum_indent(ppf, self, indent);
-//         ppf.out_buf.clone()
-//         // let f = |ppf: &mut BufPrinter<'_>, sexp: &Sexp| pp_hum_indent(ppf, sexp, indent);
-//         // fprintf(ppf, f, self);
-//         // ppf.out_buf.clone()
-//
-//         // pp_hum(ppf, self)
-//     }
-// }
+macro_rules! Sexp {
+    () => {};
+}
 
-macro_rules! list {
+macro_rules! List {
     ( $($e:expr),* ) => {
         {
             let mut v = Vec::new();
@@ -118,7 +97,7 @@ macro_rules! list {
     };
 }
 
-macro_rules! atom {
+macro_rules! Atom {
     ($e:expr) => {
         Sexp::Atom($e.to_string())
     };
@@ -130,29 +109,38 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let simple_sexp = list!(atom!("symbol_id"), atom!("1"));
+        let simple_sexp = List!(Atom!("symbol_id"), Atom!("1"));
 
         println!("{}", simple_sexp)
+        // Expected:
+        // ((symbol_id 1))
     }
+
     #[test]
     fn test_sexp_longer() {
-        let longer_sexp = list!(
-            list!(atom!("timestamp"), atom!("2019-05-03 12:00:00-04:00")),
-            list!(
-                atom!("payload"),
-                list!(
-                    atom!("Add order"),
-                    list!(
-                        list!(atom!("symbol_id"), atom!("1")),
-                        list!(atom!("order_id"), atom!("1")),
-                        list!(atom!("dir"), atom!("buy")),
-                        list!(atom!("price"), atom!("10.00")),
-                        list!(atom!("size"), atom!("1")),
-                        list!(atom!("is_active"), atom!("true"))
+        let longer_sexp = List!(
+            List!(Atom!("timestamp"), Atom!("2019-05-03 12:00:00-04:00")),
+            List!(
+                Atom!("payload"),
+                List!(
+                    Atom!("Add order"),
+                    List!(
+                        List!(Atom!("symbol_id"), Atom!("1")),
+                        List!(Atom!("order_id"), Atom!("1")),
+                        List!(Atom!("dir"), Atom!("buy")),
+                        List!(Atom!("price"), Atom!("10.00")),
+                        List!(Atom!("size"), Atom!("1")),
+                        List!(Atom!("is_active"), Atom!("true"))
                     )
                 )
             )
         );
         println!("{}", longer_sexp);
+        // Expected:
+        // (((timestamp 2019-05-03 12:00:00-04:00)
+        //    (payload
+        //      (Add order
+        //        ((symbol_id 1)
+        //          (order_id 1) (dir buy) (price 10.00) (size 1) (is_active true))))))
     }
 }
